@@ -1,3 +1,3 @@
-module github.com/Imagine96/appointer
+module appointer
 
 go 1.18
