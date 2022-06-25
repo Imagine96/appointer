@@ -9,23 +9,23 @@ const targetDate = "30-6-2022"
 const targetDate2 = "10-10-2022"
 
 func TestDraftman(t *testing.T) {
-	draftmanContactInfo := contactInfo{"draftman name", "draftman lastname", "draftman email", "draftman number"}
-	agenda := agenda{agendaId, map[string]day{}}
-	history := map[string]day{}
-	clientContactInfo := contactInfo{"client name", "client lastname", "client email", "client number"}
-	targetSchedule := schedule{scheduleId, scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
+	draftmanContactInfo := ContactInfo{"draftman name", "draftman lastname", "draftman email", "draftman number"}
+	agenda := map[string]Day{}
+	history := map[string]Day{}
+	clientContactInfo := ContactInfo{"client name", "client lastname", "client email", "client number"}
+	targetSchedule := Schedule{scheduleId, scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
 
-	draftmanTest := draftman{draftmanContactInfo, agenda, history}
+	draftmanTest := Draftman{draftmanContactInfo, agenda, history}
 
-	newDay01 := day{targetDate2, map[string]schedule{}, map[string]schedule{}, false, 6}
+	newDay01 := Day{targetDate2, map[string]Schedule{}, map[string]Schedule{}, false, 6}
 
 	//has empty an agenda
-	if len(draftmanTest.agenda.data) != 0 {
+	if len(draftmanTest.agenda) != 0 {
 		t.Error("agenda's data must start empty")
 	}
 
 	//date should not exist
-	if v, exist := draftmanTest.agenda.data[date]; exist {
+	if v, exist := draftmanTest.agenda[date]; exist {
 		t.Errorf("agenda's data must start empty \n %v", v)
 	}
 
@@ -36,7 +36,7 @@ func TestDraftman(t *testing.T) {
 	}
 
 	//now the date must exist
-	if _, exist := draftmanTest.agenda.data[date]; !exist {
+	if _, exist := draftmanTest.agenda[date]; !exist {
 		t.Errorf("agenda's data must contain date \n %v", date)
 	}
 
@@ -46,7 +46,7 @@ func TestDraftman(t *testing.T) {
 		t.Error(err)
 	}
 	//schedule must be confirmed
-	if _, exist := draftmanTest.agenda.data[date].confirmedSchedules[targetSchedule.id]; !exist {
+	if _, exist := draftmanTest.agenda[date].confirmedSchedules[targetSchedule.id]; !exist {
 		t.Errorf("agenda's must contain date \n %v \n as confirmed schedule", date)
 	}
 
@@ -57,30 +57,30 @@ func TestDraftman(t *testing.T) {
 	}
 
 	//new date must was created
-	if _, exist := draftmanTest.agenda.data[targetDate]; !exist {
+	if _, exist := draftmanTest.agenda[targetDate]; !exist {
 		t.Errorf("agenda's data must contain date \n %v", targetDate)
 	}
 
 	//schedule must be confirmed on new date
-	if _, exist := draftmanTest.agenda.data[targetDate].confirmedSchedules[targetSchedule.id]; !exist {
+	if _, exist := draftmanTest.agenda[targetDate].confirmedSchedules[targetSchedule.id]; !exist {
 		t.Errorf("agenda's must contain date \n %v \n as confirmed schedule", targetDate)
 	}
 
 	//toggles free day
-	draftmanTest.agenda.data[targetDate2] = newDay01
+	draftmanTest.agenda[targetDate2] = newDay01
 	draftmanTest.toggleFreeDay(targetDate2)
 	//"10-10-2022" must be a free day
-	if !draftmanTest.agenda.data[targetDate2].isFreeDay {
+	if !draftmanTest.agenda[targetDate2].isFreeDay {
 		t.Error("could'nt update free day \n expected true != false")
 	}
 	draftmanTest.toggleFreeDay(targetDate2)
 	//"10-10-2022" should not be a free day any more
-	if draftmanTest.agenda.data[targetDate2].isFreeDay {
+	if draftmanTest.agenda[targetDate2].isFreeDay {
 		t.Error("could'nt update free day \n expected false != true")
 	}
 
 	//confirms schedules within a date
-	draftmanTest = draftman{draftmanContactInfo, agenda, history}
+	draftmanTest = Draftman{draftmanContactInfo, agenda, history}
 	err = draftmanTest.addScheduleReqToDate(date, targetSchedule)
 	if err != nil {
 		t.Error(err)
@@ -88,15 +88,15 @@ func TestDraftman(t *testing.T) {
 
 	draftmanTest.confirmScheduleReq(date, targetSchedule.id)
 	//date's schedules req and confirmed len should be 0 and 1
-	if len(draftmanTest.agenda.data[date].schedulesRequests) != 0 {
-		t.Errorf("expected %v != %v", 0, len(draftmanTest.agenda.data[date].schedulesRequests))
+	if len(draftmanTest.agenda[date].schedulesRequests) != 0 {
+		t.Errorf("expected %v != %v", 0, len(draftmanTest.agenda[date].schedulesRequests))
 	}
-	if len(draftmanTest.agenda.data[date].confirmedSchedules) != 1 {
-		t.Errorf("expected %v != %v", 1, len(draftmanTest.agenda.data[date].schedulesRequests))
+	if len(draftmanTest.agenda[date].confirmedSchedules) != 1 {
+		t.Errorf("expected %v != %v", 1, len(draftmanTest.agenda[date].schedulesRequests))
 	}
 
 	//schedule must be confirmed on date
-	if _, exist := draftmanTest.agenda.data[targetDate].confirmedSchedules[targetSchedule.id]; !exist {
+	if _, exist := draftmanTest.agenda[targetDate].confirmedSchedules[targetSchedule.id]; !exist {
 		t.Errorf("agenda's must contain date \n %v \n as confirmed schedule", targetDate)
 	}
 }
