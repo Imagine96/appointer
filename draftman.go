@@ -1,117 +1,112 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 )
 
-type agenda struct {
-	id   string
-	data map[string]day
+type Agenda map[string]Day
+
+type Draftman struct {
+	contactInfo ContactInfo
+	agenda      Agenda
+	history     map[string]Day
 }
 
-type draftman struct {
-	contactInfo contactInfo
-	agenda      agenda
-	history     map[string]day
-}
-
-func (d draftman) getAgenda() agenda {
+func (d Draftman) getAgenda() Agenda {
 	return d.agenda
 }
 
-func (d draftman) getContactInfo() contactInfo {
+func (d Draftman) getContactInfo() ContactInfo {
 	return d.contactInfo
 }
 
-func (d *draftman) updateContactInfo(newInfo contactInfo) {
+func (d *Draftman) updateContactInfo(newInfo ContactInfo) {
 	d.contactInfo = newInfo
 }
 
-func (d *draftman) addScheduleReqToDate(date string, s schedule) error {
+func (d *Draftman) addScheduleReqToDate(date string, s Schedule) error {
 	if err := d.agenda.checkDate(date); err != nil {
 		return err
 	}
 
-	if v, exist := d.agenda.data[date]; exist {
+	if v, exist := d.agenda[date]; exist {
 		v.addScheduleReq(&s)
-		d.agenda.data[date] = v
+		d.agenda[date] = v
 	} else {
-		d.agenda.data[date] = day{date, map[string]schedule{}, map[string]schedule{s.id: s}, false, 6}
+		d.agenda[date] = Day{date, map[string]Schedule{}, map[string]Schedule{s.id: s}, false, 6}
 	}
 	return nil
 }
 
-func (d *draftman) addConfirmedScheduleToDate(date string, s schedule) error {
+func (d *Draftman) addConfirmedScheduleToDate(date string, s Schedule) error {
 	if err := d.agenda.checkDate(date); err != nil {
 		return err
 	}
 
-	if v, exist := d.agenda.data[date]; exist {
+	if v, exist := d.agenda[date]; exist {
 		v.confirmedSchedules[s.id] = s
-		return nil
 	} else {
-		d.agenda.data[date] = day{date, map[string]schedule{s.id: s}, map[string]schedule{}, false, 6}
-		return nil
+		d.agenda[date] = Day{date, map[string]Schedule{s.id: s}, map[string]Schedule{}, false, 6}
 	}
-
+	return nil
 }
 
-func (d *draftman) confirmScheduleReq(date string, id string) error {
+func (d *Draftman) confirmScheduleReq(date string, id string) error {
 	if err := d.agenda.checkDate(date); err != nil {
 		return err
 	}
 
-	if v, exist := d.agenda.data[date]; exist {
+	if v, exist := d.agenda[date]; exist {
 		if _, exist := v.schedulesRequests[id]; exist {
 			v.confirmScheduleReq(id)
-			d.agenda.data[date] = v
+			d.agenda[date] = v
 			return nil
 		}
-		return errors.New("could not schedule " + id + " on day " + date)
+		return fmt.Errorf("could find not schedule %v on day %v", id, date)
 	}
-	return errors.New("could not find any schedule on day " + date)
+	return fmt.Errorf("could not find any schedule on day %v", date)
 }
 
-func (d *draftman) rejectScheduleReq(date string, id string) error {
-	if v, exist := d.agenda.data[date]; exist {
+func (d *Draftman) rejectScheduleReq(date string, id string) error {
+	if v, exist := d.agenda[date]; exist {
 		if err := v.rejectScheduleReq(id); err != nil {
 			return err
 		}
 		return nil
 	}
-	return errors.New("could not find schedule" + id + "on day" + date)
+	return fmt.Errorf("could not find schedule %v on day %v", id, date)
 }
 
-func (d *draftman) toggleFreeDay(date string) {
-	if v, exist := d.agenda.data[date]; exist {
+func (d *Draftman) toggleFreeDay(date string) {
+	if v, exist := d.agenda[date]; exist {
 		v.isFreeDay = !v.isFreeDay
-		d.agenda.data[date] = v
+		d.agenda[date] = v
 		return
 	}
-	d.agenda.data[date] = day{date, map[string]schedule{}, map[string]schedule{}, true, 0}
+	d.agenda[date] = Day{date, map[string]Schedule{}, map[string]Schedule{}, true, 0}
 }
 
-func (d *draftman) onDayEnd(today string) {
-	if v, exist := d.agenda.data[today]; exist {
+func (d *Draftman) onDayEnd(today string) {
+	if v, exist := d.agenda[today]; exist {
 		d.history[today] = v
-		delete(d.agenda.data, today)
+		delete(d.agenda, today)
 	}
 }
 
-func (d *draftman) setScheduleOver(date string, id string) error {
-	if v, exist := d.agenda.data[date]; exist {
+func (d *Draftman) setScheduleOver(date string, id string) error {
+	if v, exist := d.agenda[date]; exist {
 		if s, exist := v.confirmedSchedules[id]; exist {
 			s.done = true
 			return nil
 		}
-		return errors.New("could not find schedule " + id + " on day " + date)
+		return fmt.Errorf("could not schedule %v on day %v", id, date)
 	}
-	return errors.New("could not find any schedule on day " + date)
+	return fmt.Errorf("could not find any schedule on day %v", date)
 }
 
-func (d *draftman) changeScheduleDay(sDate string, sId string, targetDate string) error {
+func (d *Draftman) changeScheduleDay(sDate string, sId string, targetDate string) error {
 
-	if v, exist := d.agenda.data[sDate]; exist {
+	if v, exist := d.agenda[sDate]; exist {
 		if _, exist := v.schedulesRequests[sId]; exist {
 			s, src, err := removeScheduleFromMap(sId, v.schedulesRequests)
 			if err != nil {
@@ -128,18 +123,17 @@ func (d *draftman) changeScheduleDay(sDate string, sId string, targetDate string
 			v.confirmedSchedules = src
 			d.addConfirmedScheduleToDate(targetDate, *s)
 		}
-		d.agenda.data[sDate] = v
+		d.agenda[sDate] = v
 		return nil
 	}
-	return errors.New("could not find any schedule on day " + sDate)
+	return fmt.Errorf("could not find any schedule on day %v ", sDate)
 }
 
-func (a *agenda) checkDate(date string) error {
-	if v, exist := a.data[date]; exist {
+func (a Agenda) checkDate(date string) error {
+	if v, exist := a[date]; exist {
 		if v.isDayFull() {
-			return errors.New("day is full")
+			return fmt.Errorf("day %v is full", date)
 		}
-		return nil
 	}
 	return nil
 }

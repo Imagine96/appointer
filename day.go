@@ -4,33 +4,33 @@ import (
 	"errors"
 )
 
-type scheduleDetails []string
+type ScheduleDetails []string
 
-type contactInfo struct {
+type ContactInfo struct {
 	firstName   string
 	lastName    string
 	email       string
 	phoneNumber string
 }
 
-type schedule struct {
+type Schedule struct {
 	id                string
 	direction         string
 	hour              string
-	importantDetails  scheduleDetails
-	clientContactInfo contactInfo
+	importantDetails  ScheduleDetails
+	clientContactInfo ContactInfo
 	done              bool
 }
 
-type day struct {
+type Day struct {
 	date               string
-	confirmedSchedules map[string]schedule
-	schedulesRequests  map[string]schedule
+	confirmedSchedules map[string]Schedule
+	schedulesRequests  map[string]Schedule
 	isFreeDay          bool
 	maxSchedules       int
 }
 
-func (d *day) addScheduleReq(s *schedule) error {
+func (d *Day) addScheduleReq(s *Schedule) error {
 	if d.isFreeDay {
 		return errors.New("day " + d.date + "is not available for schedule")
 	}
@@ -41,7 +41,7 @@ func (d *day) addScheduleReq(s *schedule) error {
 	return nil
 }
 
-func (d *day) rejectScheduleReq(id string) error {
+func (d *Day) rejectScheduleReq(id string) error {
 	_, _, err := removeScheduleFromMap(id, d.schedulesRequests)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (d *day) rejectScheduleReq(id string) error {
 	return nil
 }
 
-func (d *day) confirmScheduleReq(id string) error {
+func (d *Day) confirmScheduleReq(id string) error {
 	if d.isDayFull() {
 		return errors.New("day " + d.date + " is full")
 	}
@@ -61,12 +61,12 @@ func (d *day) confirmScheduleReq(id string) error {
 	d.confirmedSchedules[targetSchedule.id] = *targetSchedule
 	if len(d.confirmedSchedules) == d.maxSchedules {
 		//redirect to select other day
-		d.schedulesRequests = map[string]schedule{}
+		d.schedulesRequests = map[string]Schedule{}
 	}
 	return nil
 }
 
-func (d *day) onScheduleDone(id string) error {
+func (d *Day) onScheduleDone(id string) error {
 
 	if _, exist := d.confirmedSchedules[id]; exist {
 		if d.confirmedSchedules[id].done {
@@ -79,19 +79,19 @@ func (d *day) onScheduleDone(id string) error {
 	return nil
 }
 
-func (d day) isDayFull() bool {
+func (d Day) isDayFull() bool {
 	return d.maxSchedules == len(d.confirmedSchedules)
 }
 
-func (s schedule) getContactInfo() contactInfo {
+func (s Schedule) getContactInfo() ContactInfo {
 	return s.clientContactInfo
 }
 
-func (s *schedule) updateContactInfo(newInfo contactInfo) {
+func (s *Schedule) updateContactInfo(newInfo ContactInfo) {
 	s.clientContactInfo = newInfo
 }
 
-func removeScheduleFromMap(targetId string, src map[string]schedule) (*schedule, map[string]schedule, error) {
+func removeScheduleFromMap(targetId string, src map[string]Schedule) (*Schedule, map[string]Schedule, error) {
 	if targetSchedule, exist := src[targetId]; exist {
 		delete(src, targetId)
 		return &targetSchedule, src, nil

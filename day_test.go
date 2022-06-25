@@ -14,18 +14,18 @@ const hour = "14:00"
 
 func TestDay(t *testing.T) {
 
-	clientContactInfo := contactInfo{"client name", "client lastname", "client email", "client number"}
-	targetSchedule := schedule{scheduleId, scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	newSchedule01 := schedule{"schedule-1", scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	newSchedule02 := schedule{"schedule-2", scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	newSchedule03 := schedule{"schedule-3", scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	newSchedule04 := schedule{"schedule-4", scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	newSchedule05 := schedule{"schedule-5", scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	newSchedule06 := schedule{"schedule-6", scheduleDirection, hour, scheduleDetails{}, clientContactInfo, false}
-	schedules := []schedule{newSchedule01, newSchedule02, newSchedule03, newSchedule04, newSchedule05, newSchedule06}
+	clientContactInfo := ContactInfo{"client name", "client lastname", "client email", "client number"}
+	targetSchedule := Schedule{scheduleId, scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	newSchedule01 := Schedule{"schedule-1", scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	newSchedule02 := Schedule{"schedule-2", scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	newSchedule03 := Schedule{"schedule-3", scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	newSchedule04 := Schedule{"schedule-4", scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	newSchedule05 := Schedule{"schedule-5", scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	newSchedule06 := Schedule{"schedule-6", scheduleDirection, hour, ScheduleDetails{}, clientContactInfo, false}
+	schedules := []Schedule{newSchedule01, newSchedule02, newSchedule03, newSchedule04, newSchedule05, newSchedule06}
 
 	//in free day
-	testDay := day{date, map[string]schedule{}, map[string]schedule{}, true, maxSchedules}
+	testDay := Day{date, map[string]Schedule{}, map[string]Schedule{}, true, maxSchedules}
 
 	//should not append requests on free days
 	err := testDay.addScheduleReq(&targetSchedule)
@@ -40,7 +40,7 @@ func TestDay(t *testing.T) {
 
 	//in working day
 
-	testDay = day{date, map[string]schedule{}, map[string]schedule{}, false, maxSchedules}
+	testDay = Day{date, map[string]Schedule{}, map[string]Schedule{}, false, maxSchedules}
 
 	//testDay is not full
 	if testDay.isDayFull() {
@@ -67,7 +67,7 @@ func TestDay(t *testing.T) {
 	}
 
 	//updates contact info in schedule requests
-	newTargetContactInfo := contactInfo{"new client name", "new client lastname", "new client email", "new client number"}
+	newTargetContactInfo := ContactInfo{"new client name", "new client lastname", "new client email", "new client number"}
 	if v, exist := testDay.schedulesRequests[scheduleId]; exist {
 		v.updateContactInfo(newTargetContactInfo)
 		testDay.schedulesRequests[scheduleId] = v
